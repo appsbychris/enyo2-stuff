@@ -18,8 +18,8 @@ enyo.kind({
 			{kind: "Image", name: "image", src: "images/more-items-arrow.png", style: "float: right;border: none !important;margin-top:10px;"},
 		]},
 		{kind: "Animator", onStep: "animatorStep", onEnd: "animatorEnd"},
-		{kind: "Control", components: [
-			{kind: "Control",name: "client", style: "clear:both;position: relative;", classes: "enyo-border-box"}
+		{kind: "Control", style: "clear:both;position: relative;overflow: hidden;height:100%;width:100%;",components: [
+			{kind: "Control",name: "client", style: "position: relative;", classes: "enyo-border-box"}
 		]}
 	],
 	initComponents: function() {
