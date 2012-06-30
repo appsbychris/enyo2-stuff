@@ -11,7 +11,7 @@ A menu item that has a label, and then clicks to expand a sub menu.
 Currently setup to use specific CSS stylings for items.
 
 Example:
-
+<code>
 enyo.kind({
   kind: "onyx.MenuDecorator", 
 	name: "BlogNamesMenu",
@@ -70,4 +70,4 @@ enyo.kind({
 	},
 
 
-});
+});</code>
