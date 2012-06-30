@@ -12,6 +12,14 @@ enyo.kind({
 	name: "TitledDrawer",
 	kind: "onyx.Drawer",
 	open: false,
+	allowClick: false, //allows auto opening of drawer
+	noAnimate: false, //can turn off animation for situations where animations looks bad
+	handlers:{
+		ontap: "toggleOpen"
+	},
+	events: {
+		onOpenChanged: ""
+	},
 	tools: [
 		{kind: "Control", name: "contain", showing: false, classes: "enyo-border-box", components: [
 			{kind: "Control",name: "title", style: "float:left;padding: 10px;", content: ""/*, classes: "onyx-menu-item"*/},
@@ -33,6 +41,7 @@ enyo.kind({
 	},
 	openChanged: function() {
 		this.$.client.show();
+
 		if (this.hasNode()) {
 			var v = this.orient == "v";
 			var d = v ? "height" : "width";
@@ -42,19 +51,33 @@ enyo.kind({
 
 			var s = this.hasNode()[v ? "scrollHeight" : "scrollWidth"] + ((subItems.length-1) * 10);
 			var t = this.$.contain.hasNode();
+			var tH = 0;
 			if (t) {
-				var tH = 10 + (v ? t.scrollHeight : t.scrollWidth);
+				tH = 10 + (v ? t.scrollHeight : t.scrollWidth);
 			}
-			this.$.animator.play({
-				startValue: this.open ? 0 + (t ? tH : 0): s,
-				endValue: this.open ? s : 0 + (t ? tH : 0),
-				dimension: d,
-				position: p
-			});
+			//to turn off animation in case it doesn't work well on target platforms
+			if (this.noAnimate === false) {
+				this.$.animator.play({
+					startValue: this.open ? 0 + (t ? tH : 0): s,
+					endValue: this.open ? s : 0 + (t ? tH : 0),
+					dimension: d,
+					position: p
+				});
+			}
+			else {
+				this.applyStyle(d,this.open ? 0 + (t ? tH : 0): s + (t ? tH : 0));
+				this.$.client.setShowing(this.open);
+			}
 		} else {
 			this.$.client.setShowing(this.open);
+		};
+		this.$.image.setAttribute("src", this.open ? "images/close-more-items-arrow.png" : "images/more-items-arrow.png");
+		this.doOpenChanged({open: this.open});
+	},
+	toggleOpen: function() {
+		if (this.allowClick === true) {
+			this.setOpen(!this.getOpen())
 		}
-		this.$.image.setAttribute("src", this.open ? "images/close-more-items-arrow.png" : "images/more-items-arrow.png")
 	}
 });
 enyo.kind({
@@ -67,11 +90,6 @@ enyo.kind({
 	},
 	handlers: {
 		ontap: "toggleDrawer"
-	},
-	tap: function(inSender) {
-		/*this.inherited(arguments);
-		this.bubble("onRequestHideMenu");
-		this.doSelect({selected:this, content:this.content});*/
 	},
 	toggleDrawer: function() {
 		this.setOpen(!this.getOpen());
