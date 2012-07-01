@@ -15,7 +15,8 @@ enyo.kind({
 	allowClick: false, //allows auto opening of drawer
 	noAnimate: false, //can turn off animation for situations where animations looks bad
 	handlers:{
-		ontap: "toggleOpen"
+		ontap: "toggleOpen",
+		onSubMenuOpen: "adjustSize"
 	},
 	events: {
 		onOpenChanged: ""
@@ -23,7 +24,7 @@ enyo.kind({
 	tools: [
 		{kind: "Control", name: "contain", showing: false, classes: "enyo-border-box", components: [
 			{kind: "Control",name: "title", style: "float:left;padding: 10px;", content: ""/*, classes: "onyx-menu-item"*/},
-			{kind: "Image", name: "image", src: "images/more-items-arrow.png", style: "float: right;border: none !important;margin-top:10px;"},
+			{kind: "Image", name: "image", src: "assets/more-items-arrow.png", style: "float: right;border: none !important;margin-top:10px;"}
 		]},
 		{kind: "Animator", onStep: "animatorStep", onEnd: "animatorEnd"},
 		{kind: "Control", style: "clear:both;position: relative;overflow: hidden;height:100%;width:100%;",components: [
@@ -38,6 +39,12 @@ enyo.kind({
 		}
 		this.inherited(arguments);
 
+	},
+	adjustSize: function() {
+		var x = this.noAnimate;
+		this.noAnimate = true;
+		this.openChanged();
+		this.noAnimate = x;
 	},
 	openChanged: function() {
 		this.$.client.show();
@@ -70,13 +77,15 @@ enyo.kind({
 			}
 		} else {
 			this.$.client.setShowing(this.open);
-		};
-		this.$.image.setAttribute("src", this.open ? "images/close-more-items-arrow.png" : "images/more-items-arrow.png");
+		}
+		this.$.image.setAttribute("src", this.open ? "assets/close-more-items-arrow.png" : "assets/more-items-arrow.png");
 		this.doOpenChanged({open: this.open});
+		this.bubbleUp("onSubMenuOpen");
 	},
 	toggleOpen: function() {
 		if (this.allowClick === true) {
-			this.setOpen(!this.getOpen())
+			this.setOpen(!this.getOpen());
+			return true;
 		}
 	}
 });
@@ -93,5 +102,6 @@ enyo.kind({
 	},
 	toggleDrawer: function() {
 		this.setOpen(!this.getOpen());
-	},
+		return true;
+	}
 });
