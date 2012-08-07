@@ -14,3 +14,7 @@ Example:
 http://appsbychris.webege.com/expandmenu/index.html
 
 There is a bootplate app example too
+
+Works in chrome, and on android.
+
+Has issues in firefox and IE
