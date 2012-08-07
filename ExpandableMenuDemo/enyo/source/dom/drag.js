@@ -19,8 +19,8 @@
 		short period of time (about 200ms).
 
 	* "release" is generated when the pointer is released after being held down,
-		or is moved off of the node while still held down.  The target is the
-		same as that of the "hold" event.
+		or is moved off of the node while still held down, but before any potential dragstart event.  
+		The target is the same as that of the "hold" event.
 
 	* "holdpulse" is generated when the pointer is held down without moving for
 		a short period of time; it repeats periodically about once every 200ms.
@@ -74,6 +74,7 @@ enyo.gesture.drag = {
 			// this error condition can occur on IE/Webkit after interaction with a scrollbar.
 			if (!e.which) {
 				this.stopDragging(e);
+				this.cancelHold();
 				this.tracking = false;
 				//console.log("enyo.gesture.drag: mouse must be down to drag.");
 				return;

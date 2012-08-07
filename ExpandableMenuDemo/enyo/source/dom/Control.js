@@ -4,33 +4,46 @@ enyo.kind({
 	published: {
 		//* HTML tag name to use for control. If it's null, no tag is generated, only the contents are used.
 		tag: "div",
+		//* Hash of DOM attributes to apply to the generated HTML tag.
 		attributes: null,
+		//* Space-delimited set of CSS classes to apply to the generated HTML tag.
 		classes: "",
+		//* Style attribute to apply to the generated HTML tag.
 		style: "",
+		//* Content that will be generated inside the HTML tag; defaults to plain text unless _allowHtml_ is true.
 		content: "",
+		//* Boolean indicating whether the tag will be visible or hidden in the document.
 		showing: true,
 		//* If false, HTML codes in _content_ are escaped before rendering.
 		allowHtml: false,
 		//
 		// convenience properties for common attributes
 		//
+		//* Shortcut for setting _src_ attribute in _attributes_ hash. Overrides that value.
 		src: "",
 		//
 		// esoteric
 		//
+		/**
+			Set to false if the control should not generate any HTML. Used to inhibit generation 
+			of popups until they're shown at runtime.
+		*/
 		canGenerate: true,
 		//
 		// ad hoc properties:
 		//
-		// for layouts
+		//* Flag used by control layouts to pick which control will expand to fill area.
 		fit: false,
-		// for ares
+		//* Used by Ares design editor for design objects.
 		isContainer: false
 	},
 	handlers: {
+		//* Controls will call a user-provided _tap_ method when tapped upon.
 		ontap: "tap"
 	},
+	//* The default kind for controls created inside this control that don't specify their own kind.
 	defaultKind: "Control",
+	//* A set of CSS classes that are applied to controls created inside this control.
 	controlClasses: "",
 	//* @protected
 	node: null,
@@ -309,6 +322,7 @@ enyo.kind({
 		}
 		return inDefault;
 	},
+	//* @protected
 	domStylesChanged: function() {
 		this.domCssText = enyo.Control.domStylesToCssText(this.domStyles);
 		this.invalidateTags();
@@ -319,6 +333,7 @@ enyo.kind({
 	},
 	//
 	//
+	//* @public
 	/**
 		Renders this object into DOM, generating a DOM node if needed.
 	*/
@@ -344,6 +359,8 @@ enyo.kind({
 	},
 	/**
 		Renders this object into the DOM node referenced by _inParentNode_.
+		If rendering into the document body element, appropriate styles will
+		be used to have it expand to fill the whole window.
 	*/
 	renderInto: function(inParentNode) {
 		// clean up render flags and memoizations
@@ -362,6 +379,11 @@ enyo.kind({
 		// support method chaining
 		return this;
 	},
+	/**
+		Uses _document.write_ to output the control into the document.
+		If control has _fit: true_ defined, appropriate styles will be set
+		to have it expand to fill its container.
+	*/
 	write: function() {
 		if (this.fit) {
 			this.setupBodyFitting();
@@ -377,7 +399,7 @@ enyo.kind({
 		this.addClass("enyo-fit enyo-clip");
 	},
 	/**
-		Override to perform tasks that require access to the DOM node.
+		Override this method to perform tasks that require access to the DOM node.
 
 			rendered: function() {
 				this.inherited(arguments);

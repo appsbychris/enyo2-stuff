@@ -1,9 +1,34 @@
-/** This is used to manage row selection state for lists. */
+/**
+	_enyo.Selection_ is used to manage row selection state for lists. It
+	provides selection state management	for both single-select and multi-select
+	lists.
+
+		// The following is an excerpt from enyo.FlyweightRepeater.
+		enyo.kind({
+			name: "enyo.FlyweightRepeater",
+			...
+			components: [
+				{kind: "Selection", onSelect: "selectDeselect", onDeselect: "selectDeselect"},
+				...
+			],
+			tap: function(inSender, inEvent) {
+				...
+				// mark the tapped row as selected
+				this.$.selection.select(inEvent.index);
+				...
+			},
+			selectDeselect: function(inSender, inEvent) {
+				// this is where a row selection highlight might be applied
+				this.renderRow(inEvent.key);
+			}
+			...
+		})
+*/
 enyo.kind({
 	name: "enyo.Selection",
 	kind: enyo.Component,
 	published: {
-		//* if true, allow multiple selections
+		//* If true, multiple selections are allowed.
 		multi: false
 	},
 	events: {
@@ -12,30 +37,29 @@ enyo.kind({
 
 				{kind: "Selection", onSelect: "selectRow"...
 				...
-				selectRow: function(inSender, inKey, inPrivateData) {
+				selectRow: function(inSender, inEvent) {
 					...
 
-			_inKey_ is whatever key was used to register 
-			the selection, usually a row index.
+			_inEvent.key_ is whatever key was used to register 
+			the selection (usually a row index).
 
-			_inPrivateData_ references data registered
-			with this key by the code that made the selection.
+			_inEvent.data_ references data registered
+			with this key by the code that made the original selection.
 		*/
 		onSelect: "",
 		/**
-			Fires when an items is  deselected.
+			Fires when an item is deselected.
 
 				{kind: "Selection", onSelect: "deselectRow"...
 				...
-				deselectRow: function(inSender, inKey, inPrivateData)
+				deselectRow: function(inSender, inEvent)
 					...
 
-			_inKey_ is whatever key was used to request
-			the deselection, usually a row index.
+			_inEvent.key_ is whatever key was used to request
+			the deselection (usually a row index).
 
-			_inPrivateData_ references data registered
-			with this key by the code that made the original 
-			selection.
+			_inEvent.data_ references data registered
+			with this key by the code that made the selection.
 		*/
 		onDeselect: "",
 		//* Sent when selection changes (but not when the selection is cleared).
@@ -58,34 +82,37 @@ enyo.kind({
 		}
 	},
 	//* @public
-	//* remove all selections
+	//* Removes all selections.
 	clear: function() {
-		this.selected = [];
+		this.selected = {};
 	},
-	//* returns true if the inKey row is selected
+	//* Returns true if the _inKey_ row is selected.
 	isSelected: function(inKey) {
 		return this.selected[inKey];
 	},
-	//* manually set a row to selected or unselected
+	//* Manually sets a row's state to selected or unselected.
 	setByKey: function(inKey, inSelected, inData) {
 		if (inSelected) {
 			this.selected[inKey] = (inData || true);
 			this.lastSelected = inKey;
-			this.doSelect({key: inKey, wasSelected: this.selected[inKey]});
+			this.doSelect({key: inKey, data: this.selected[inKey]});
 		} else {
 			var was = this.isSelected(inKey);
 			delete this.selected[inKey];
-			this.doDeselect({key: inKey, wasSelected: was});
+			this.doDeselect({key: inKey, data: was});
 		}
 		this.doChange();
 	},
-	//* deselect a row
+	//* Deselects a row.
 	deselect: function(inKey) {
 		if (this.isSelected(inKey)) {
 			this.setByKey(inKey, false);
 		}
 	},
-	//* select a row. If the selection has the multi property set to false, it will also deselect the previous selection.
+	/**
+		Selects a row. If the _multi_ property is set to false, _select_ will
+		also deselect the previous selection.
+	*/
 	select: function(inKey, inData) {
 		if (this.multi) {
 			this.setByKey(inKey, !this.isSelected(inKey), inData);
@@ -94,15 +121,37 @@ enyo.kind({
 			this.setByKey(inKey, true, inData);
 		}
 	},
-	//* toggle selection for a row. If the multi is false, toggling a selection on will deselect the previous selection
+	/**
+		Toggles selection state for a row. If the _multi_ property is set to
+		false, toggling a selection on will deselect the previous selection.
+	*/
 	toggle: function(inKey, inData) {
 		if (!this.multi && this.lastSelected != inKey) {
 			this.deselect(this.lastSelected);
 		}
 		this.setByKey(inKey, !this.isSelected(inKey), inData);
 	},
-	//* return the selection
+	/**
+		Returns the selection as a hash in which each selected item has a value;
+		unselected items are undefined.
+	*/
 	getSelected: function() {
 		return this.selected;
+	},
+	/**
+		Remove a row that's included in the selection set. If this row is
+		selected, it will be unselected.  Any rows above this row will
+		have their keys value reduced by one.
+	*/
+	remove: function(inKey) {
+		var newSelected = {};
+		for (var row in this.selected) {
+			if (row < inKey) {
+				newSelected[row] = this.selected[row];
+			} else if (row > inKey) {
+				newSelected[row - 1] = this.selected[row];
+			}
+		}
+		this.selected = newSelected;
 	}
 });

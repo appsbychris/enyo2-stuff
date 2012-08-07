@@ -49,6 +49,11 @@ enyo.macroize = function(inText, inMap, inPattern) {
 	return result;
 };
 
+/**
+	Similar to _enyo.macroize_, but performs only one iteration of the _replace_
+	call. This means that recursive expansion of macros isn't possible, but it
+	avoids the extra processing needed to find recursive use.
+*/
 enyo.quickMacroize = function(inText, inMap, inPattern) {
 	var v, working, result = inText, pattern = inPattern || enyo.macroize.pattern;
 	var fn = function(macro, name) {
@@ -65,5 +70,5 @@ enyo.quickMacroize = function(inText, inMap, inPattern) {
 
 //* @protected
 
-// matches macros of form {$name}
+// Matches macros of the form {$name}.
 enyo.macroize.pattern = /\{\$([^{}]*)\}/g;

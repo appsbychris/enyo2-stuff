@@ -15,19 +15,22 @@ enyo.kind({
 	allowClick: false, //allows auto opening of drawer
 	noAnimate: false, //can turn off animation for situations where animations looks bad
 	handlers:{
-		ontap: "toggleOpen",
+		/*For nested drawers, this will resize the drawer automatically
+		* You can also listen for this event to scroll the menu into view when it gets opened
+
+		*/
 		onSubMenuOpen: "adjustSize"
 	},
 	events: {
 		onOpenChanged: ""
 	},
 	tools: [
-		{kind: "Control", name: "contain", showing: false, classes: "enyo-border-box", components: [
-			{kind: "Control",name: "title", style: "float:left;padding: 10px;", content: ""/*, classes: "onyx-menu-item"*/},
-			{kind: "Image", name: "image", src: "assets/more-items-arrow.png", style: "float: right;border: none !important;margin-top:10px;"}
+		{kind: "Control", name: "contain",ontap: "toggleOpen", showing: false, classes: "enyo-border-box", components: [
+			{kind: "Control",name: "title", style: "float:left;padding: 10px;"},
+			{kind: "Image", name: "image", src: "assets/more-items-arrow.png", style: "float: right;border: none !important;margin-top:10px;box-shadow: none !important;"}
 		]},
 		{kind: "Animator", onStep: "animatorStep", onEnd: "animatorEnd"},
-		{kind: "Control", style: "clear:both;position: relative;overflow: hidden;height:100%;width:100%;",components: [
+		{kind: "Control", style: "clear:both;position:relative;overflow:hidden;height:100%;width:100%;",components: [
 			{kind: "Control",name: "client", style: "position: relative;", classes: "enyo-border-box"}
 		]}
 	],
@@ -55,14 +58,14 @@ enyo.kind({
 			var p = v ? "top" : "left";
 			this.applyStyle(d, null);
 			var subItems = this.getClientControls();
-
-			var s = this.hasNode()[v ? "scrollHeight" : "scrollWidth"] + ((subItems.length-1) * 10);
+			var borderWidth = (subItems.length < 2 ? 10 : (subItems.length - 1) * 10);
+			var s = this.hasNode()[v ? "scrollHeight" : "scrollWidth"] + borderWidth;
 			var t = this.$.contain.hasNode();
 			var tH = 0;
 			if (t) {
 				tH = 10 + (v ? t.scrollHeight : t.scrollWidth);
 			}
-			//to turn off animation in case it doesn't work well on target platforms
+			
 			if (this.noAnimate === false) {
 				this.$.animator.play({
 					startValue: this.open ? 0 + (t ? tH : 0): s,
@@ -80,7 +83,7 @@ enyo.kind({
 		}
 		this.$.image.setAttribute("src", this.open ? "assets/close-more-items-arrow.png" : "assets/more-items-arrow.png");
 		this.doOpenChanged({open: this.open});
-		this.bubbleUp("onSubMenuOpen");
+		this.bubbleUp("onSubMenuOpen", {sender: this});
 	},
 	toggleOpen: function() {
 		if (this.allowClick === true) {

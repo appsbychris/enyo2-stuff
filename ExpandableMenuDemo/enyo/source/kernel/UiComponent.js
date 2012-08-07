@@ -11,13 +11,20 @@ enyo.kind({
 	name: "enyo.UiComponent",
 	kind: enyo.Component,
 	published: {
+		//* the UiComponent that physically contains this component in the DOM
 		container: null,
+		//* the UiComponent that owns this component for the purpose of event propogation
 		parent: null,
+		//* the UiComponent that will physically contain new items added using createComponent
 		controlParentName: "client",
+		//* a kind used to manage the size and placement of child components
 		layoutKind: ""
 	},
 	handlers: {
 		onresize: "resizeHandler"
+	},
+	statics: {
+		_resizeFlags: {showingOnly: true} // don't waterfall these events into hidden controls
 	},
 	create: function() {
 		this.controls = [];
@@ -132,11 +139,16 @@ enyo.kind({
 	},
 	//* @protected
 	addControl: function(inControl) {
+		// Called to add an already created control to the object's control list. It is
+		// not used to create controls and should likely not be called directly.
+		// It can be overridden to detect when controls are added.
 		this.controls.push(inControl);
 		// When we add a Control, we also establish a parent.
 		this.addChild(inControl);
 	},
-	removeControl: function(inControl) {
+    removeControl: function(inControl) {
+		// Called to remove a control from the object's control list. As with addControl it
+		// can be overridden to detect when controls are removed.
 		// When we remove a Control, we also remove it from its parent.
 		inControl.setParent(null);
 		return enyo.remove(inControl, this.controls);
@@ -216,8 +228,8 @@ enyo.kind({
 	*/
 	// syntactic sugar for 'waterfall("onresize")'
 	resized: function() {
-		this.waterfall("onresize");
-		this.waterfall("onpostresize");
+		this.waterfall("onresize", enyo.UiComponent._resizeFlags);
+		this.waterfall("onpostresize", enyo.UiComponent._resizeFlags);
 	},
 	//* @protected
 	resizeHandler: function() {
@@ -246,7 +258,13 @@ enyo.kind({
 		}
 		// waterfall to my children
 		for (var i=0, cs=this.children, c; c=cs[i]; i++) {
-			c.waterfall(inMessage, inPayload, inSender);
+			// Do not send {showingOnly: true} events to hidden controls. This flag is set for resize events 
+			// which are broadcast from within the framework. This saves a *lot* of unnecessary layout.
+			// TODO: Maybe remember that we did this, and re-send those messages on setShowing(true)? 
+			// No obvious problems with it as-is, though
+			if (c.showing || !(inPayload && inPayload.showingOnly)) {
+				c.waterfall(inMessage, inPayload, inSender);
+			}
 		}
 	},
 	getBubbleTarget: function() {
@@ -271,6 +289,7 @@ enyo.createFromKind = function(inKind, inParam) {
 enyo.master = new enyo.Component({
 	name: "master",
 	notInstanceOwner: true,
+	eventFlags: {showingOnly: true}, // don't waterfall these events into hidden controls
 	getId: function() {
 		return '';
 	},
@@ -281,8 +300,8 @@ enyo.master = new enyo.Component({
 			// Resize is special; waterfall this message.
 			// This works because master is a Component, so it waterfalls
 			// to its owned Components (i.e., master has no children).
-			enyo.master.waterfallDown("onresize");
-			enyo.master.waterfallDown("onpostresize");
+			enyo.master.waterfallDown("onresize", this.eventFlags);
+			enyo.master.waterfallDown("onpostresize", this.eventFlags);
 		} else {
 			// All other top-level events are sent only to interested Signal
 			// receivers.

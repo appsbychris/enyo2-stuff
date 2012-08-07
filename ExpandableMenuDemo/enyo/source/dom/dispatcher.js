@@ -37,7 +37,7 @@ enyo.dispatcher = {
 		}
 		this.listen(inListener, inEventName);
 	},
-	//* Fire an event for Enyo to listen for
+	//* Fires an event for Enyo to listen for.
 	dispatch: function(e) {
 		// Find the control who maps to e.target, or the first control that maps to an ancestor of e.target.
 		var c = this.findDispatchTarget(e.target) || this.findDefaultTarget(e);
@@ -53,7 +53,7 @@ enyo.dispatcher = {
 			this.dispatchBubble(e, c);
 		}
 	},
-	//* Takes an Event.target and finds the corresponding enyo control
+	//* Takes an Event.target and finds the corresponding Enyo control.
 	findDispatchTarget: function(inNode) {
 		var t, n = inNode;
 		// FIXME: Mozilla: try/catch is here to squelch "Permission denied to access property xxx from a non-chrome context" 
@@ -75,7 +75,7 @@ enyo.dispatcher = {
 		}
 		return t;
 	},
-	//* Return the default enyo control for events
+	//* Returns the default Enyo control for events.
 	findDefaultTarget: function(e) {
 		return enyo.master;
 	},
@@ -105,6 +105,9 @@ enyo.bubble = function(inEvent) {
 	}
 };
 
+// This string is set on event handlers attributes for DOM elements that
+// don't normally bubble (like onscroll) so that they can participate in the
+// Enyo event system.
 enyo.bubbler = 'enyo.bubble(arguments[0])';
 
 // FIXME: we need to create and initialize dispatcher someplace else to allow overrides
