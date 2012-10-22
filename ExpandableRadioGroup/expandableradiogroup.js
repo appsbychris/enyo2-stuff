@@ -61,7 +61,7 @@ enyo.kind({
 						}
 						bool = (c_w == 1 ? false : true);
 					}
-					if (row == c_w && (level == 1 || i + c_w >= c.length) && bool === false) {
+					if (row == c_w && (level == 1 || (i + c_w >= c.length && i != c.length - 1)) && bool === false) {
 						if (level == 1) {
 							c[i].addClass("expand-radiobutton-top-right");
 						}
