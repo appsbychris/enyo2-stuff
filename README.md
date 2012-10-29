@@ -1,6 +1,8 @@
 enyo2-stuff
 ===========
 
+In Expandable Menu:
+
 Titled drawer:
 
 A drawer with a title and an arrow image. Can set animation on and off, can set to auto toggle open/close on clicks
@@ -18,3 +20,10 @@ There is a bootplate app example too
 Works in chrome, and on android.
 
 Has issues in firefox and IE
+
+
+Expandable Radio Group:
+
+Styles the radio group nicely with rounded corners on correct ends even when it has to wrap for small screen sizes.
+Check demo here:
+http://jsfiddle.net/3L6jL/2/

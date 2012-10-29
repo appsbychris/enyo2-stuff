@@ -9,23 +9,26 @@ enyo.kind({
 	name: "expandable.RadioGroup",
 	kind: "Group",
 	published: {
+		//@public: the width, in px, of each radio button
 		controlWidth: 142,
-		unit: "px"
+
+		//@public: specify the width to use, in px, in case getBounds() doesn't return a width,
+		//if null, window.innerWidth() - 20 is used.
+		failureWidth: null
 	},
+	//@protected
+	unit: "px",
 	//* If true (the default), only one radio button may be active at a time.
 	highlander: true,
 	defaultKind: "expandable.RadioButton",
 	create: function() {
 		this.inherited(arguments);
-		setTimeout(enyo.bind(this,function() {
+		window.setTimeout(enyo.bind(this,function() {
 			this.flowSize();
 		}), 250);
 		
 	},
 	controlWidthChanged: function() {
-		this.flowSize();
-	},
-	unitChanged: function() {
 		this.flowSize();
 	},
 	flowSize: function() {
@@ -42,9 +45,18 @@ enyo.kind({
 		var b = this.getBounds();
 		var w = this.controlWidth;
 
-		//sometimes getbounds doesn't return a width,
-		//i use the window width if its not there
-		if (!b.width) {b.width = window.innerWidth - 20;}
+		//default styling of first and last control
+		var defaultSizing = function(c) {
+			c[0].addClass("expand-radiobutton-top-left");
+			c[0].addClass("expand-radiobutton-bottom-left");
+			c[c.length - 1].addClass("expand-radiobutton-top-right");
+			c[c.length - 1].addClass("expand-radiobutton-right-border");
+			c[c.length - 1].addClass("expand-radiobutton-bottom-right");
+		};
+
+		if (!b.width) {
+			b.width = (this.failureWidth === null ? window.innerWidth - 20 : this.failureWidth);
+		}
 		if (b.width) {
 			if ((w * c.length) > b.width) {
 				var c_w = Math.floor(b.width / w);
@@ -89,7 +101,6 @@ enyo.kind({
 						break;
 					}
 					if (bool === false ) {
-						//
 						if (row >= c_w) {
 							c[i].addClass("expand-radiobutton-right-border");
 							level++;
@@ -102,12 +113,11 @@ enyo.kind({
 				}
 			}
 			else {
-				c[0].addClass("expand-radiobutton-top-left");
-				c[0].addClass("expand-radiobutton-bottom-left");
-				c[c.length - 1].addClass("expand-radiobutton-top-right");
-				c[c.length - 1].addClass("expand-radiobutton-right-border");
-				c[c.length - 1].addClass("expand-radiobutton-bottom-right");
+				defaultSizing(c);
 			}
+		}
+		else {
+			defaultSizing(c);
 		}
 		
 	},
