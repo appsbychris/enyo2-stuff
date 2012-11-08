@@ -1,0 +1,9 @@
+.menu-title {
+	text-shadow: 1px 2px 1px rgba(0,0,0,0.4);
+	color: white;
+	margin-bottom: 2px;
+	border-bottom: 2px solid rgba(15, 15, 15, 0.6);
+	border-bottom-style:ridge;
+	box-sizing: border-box;
+	-webkit-box-sizing: border-box;
+}
