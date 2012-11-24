@@ -321,7 +321,7 @@ enyo.kind({
 		this.createComponents(Arr, {owner: this});
 		this.render();
 		var b = this.$[Arr[0].name].getBounds();
-		this.viewWidth = b.width || WND_WIDTH();
+		this.viewWidth = b.width || window.innerWidth;
 
 		var cur = this.items[this.index];
 		var prev = this.items[this.index - 1];
@@ -362,7 +362,7 @@ enyo.kind({
 		if (this.$[this.items[this.index].name]) {
 			b = this.$[this.items[this.index].name].getBounds();
 		}
-		this.viewWidth = b.width || WND_WIDTH();
+		this.viewWidth = b.width || window.innerWidth;
 		var start = this.index - 3;
 		if (start < 0) {start = 0;}
 		this.stubWidth = start * this.viewWidth;
