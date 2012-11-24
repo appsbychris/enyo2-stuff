@@ -27,3 +27,9 @@ Expandable Radio Group:
 Styles the radio group nicely with rounded corners on correct ends even when it has to wrap for small screen sizes.
 Check demo here:
 http://jsfiddle.net/3L6jL/2/
+
+
+android.HSnapScroller
+A horizontal snap scroller that performs better on android vs panels with the leftrightarranger.
+Demo here: (webkit browsers only)
+http://appsbychris.webege.com/SnapScrollerDemo/index.html
