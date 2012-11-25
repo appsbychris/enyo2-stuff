@@ -130,6 +130,7 @@ enyo.kind({
 	classes: "scroller",
 	thumb: false,
 	vertical: "hidden",
+	preventDragPropagation: false,
 	published: {
 		
 	},
@@ -157,6 +158,7 @@ enyo.kind({
 		
 	},
 	handlers: {
+		ondragstart: "dragstart",
 		ondragfinish: "dragfinish"
 	},
 	components: [
@@ -371,8 +373,7 @@ enyo.kind({
 		
 	},
 	//*@protected
-	scrollStart: function() {
-		this.inherited(arguments);
+	dragstart: function() {
 		this.isDragging = this.getStrategy().dragging;
 		this.lastSL = this.getScrollLeft();
 		this.doTransitionStart({index: this.index});
@@ -381,7 +382,6 @@ enyo.kind({
 	scrollStop: function() {
 		this.inherited(arguments);
 		if (this.snapping) {
-			this.snapping = false;
 			this.stabalizeControl();
 		}
 	},
