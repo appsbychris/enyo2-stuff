@@ -29,7 +29,8 @@ Check demo here:
 http://jsfiddle.net/3L6jL/2/
 
 
-android.HSnapScroller
+android.HSnapScroller:
+
 A horizontal snap scroller that performs better on android vs panels with the leftrightarranger.
 Demo here: (webkit browsers only)
-http://appsbychris.webege.com/SnapScrollerDemo/index.html
+http://appsbychris.net/snapscrollerdemo/
