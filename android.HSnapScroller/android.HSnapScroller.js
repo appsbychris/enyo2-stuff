@@ -134,6 +134,16 @@ enyo.kind({
 	published: {
 		
 	},
+	/** @public
+	 *  A SnapScrollerCell that will be inserted when the user reaches to end of the list
+	 *  while new views are being fetched.
+	 *  MUST have a name property,
+	 *  MUST be same width and height of other views and
+	 *  MUST be a SnapScrollerCell
+	*/
+	loadingView: {
+
+	},
 	events: {
 		//All events send an object with the current index number
 		/*
@@ -154,17 +164,26 @@ enyo.kind({
 		onTransitionNearFinish: "",
 
 		//fired after animation is complete
-		onTransitionFinish: ""
+		onTransitionFinish: "",
+
+		//fired when the loading view is visible
+		onLoadingViewVisible: "",
+
+		//fired when the loading view is no longer on the screen.
+		onLoadingViewHidden: ""
 		
 	},
 	handlers: {
+		onScroll: "scrolling",
+		onScrollStart: "snapStart",
+		onScrollStop: "snapFinish",
 		ondragstart: "dragstart",
 		ondragfinish: "dragfinish"
 	},
 	components: [
 		{kind: "Control", name: "stub", classes: "scroller-slide", isChrome: true}
 	],
-	//payload of views, all should be the same width and all need to be an android.SnapScrollerCell
+	//payload of views, all MUST BE the same width and all MUST BE an android.SnapScrollerCell
 	//All items need to have a name property
 	//Call setItems to set the items up. 
 	//setItems requires 3 paramaters, ([payload of views], currentIndex #, boolean to rerender)
@@ -175,27 +194,31 @@ enyo.kind({
 	stubWidth: 0,
 	viewWidth: 0,
 	lastSL: 0,
-
+	loadingViewIndex: -1,
+	wentInOverScroll: 0,
 	//current index number
 	index: 0,
 
+	//* @public
 	//Amount of px the user needs to drag to make a switch
-	triggerDistance: 50,
+	triggerDistance: 20,
 	
 	//*@protected
 	snapping: false,
 	goingBack: false,
 	isDragging: false,
-
+	shouldFireStartEvent: true,
+	//*@protected
 	create: function() {
 		this.inherited(arguments);
 		var s = this.getStrategy().$.scrollMath;
-		s.kFrictionDamping = 0.88;
+		s.kFrictionDamping = 0.8;
 		s.interval = 1;
 		s.kSnapFriction = 0.5;
 		s.kDragDamping = 0.2;
 		s.kSpringDamping = 0.7;
 		s.frame = 1;
+
 	},
 
 	//*@public
@@ -213,21 +236,21 @@ enyo.kind({
 	//animates to the next cell
 	next: function() {
 		if (this.animationIsRunning()) {return;}
+		this.transitionStart();
 		this.increaseIndex();
 		this.goingBack = false;
-		this.snapping = true;
 		this.transistionNearFinish();
-		this.scrollToIndex();
+		this.scrollToIndex(true);
 	},
 	//*@public
 	//animates to previous cell
 	previous: function() {
 		if (this.animationIsRunning()) {return;}
+		this.transitionStart();
 		this.decreaseIndex();
 		this.goingBack = true;
-		this.snapping = true;
 		this.transistionNearFinish();
-		this.scrollToIndex();
+		this.scrollToIndex(true);
 	},
 	//*@protected
 	animationIsRunning: function() {
@@ -270,6 +293,13 @@ enyo.kind({
 	*/
 	setItems: function(items, curIndex, reRender) {
 		this.items = items;
+		if (this.loadingViewIndex >=0) {
+			this.wentInOverScroll = 0;
+			this.scrollToIndex();
+			this.$[this.loadingView.name].destroy();
+			this.loadingViewIndex = -1;
+			this.loadingViewHidden();
+		}
 		this.index = curIndex;
 		this.loadItems(reRender);
 	},
@@ -284,6 +314,11 @@ enyo.kind({
 			this.ensureLoad();
 		}
 
+	},
+	//*@protected
+	//* needed on android due to some light drags not firing the full touchdown, touchmove, touchend cycle
+	tap: function() {
+		this.setDirect();
 	},
 	//*@protected
 	ensureLoad: function() {
@@ -328,6 +363,7 @@ enyo.kind({
 		var cur = this.items[this.index];
 		var prev = this.items[this.index - 1];
 		var nex = this.items[this.index + 1];
+		var skinned = this.items[this.index + 2];
 		var noimages = this.items[this.index - 2];
 		var invisible = this.items[this.index - 3];
 
@@ -339,6 +375,9 @@ enyo.kind({
 		if (nex) {
 			this.$[nex.name].flowControls(true);
 		}
+		if (skinned) {
+			this.$[skinned.name].flowControls();
+		}
 		if (noimages) {
 			this.$[noimages.name].flowControls();
 		}
@@ -346,9 +385,7 @@ enyo.kind({
 			this.$[invisible.name].flowControls();
 			this.$[invisible.name].applyStyle("visibility", "hidden");
 		}
-		this.stubWidth = start * this.viewWidth;
-		this.setStubWidth(this.stubWidth);
-		this.scrollToIndex();
+		this.recalculateSize();
 	},
 	//*@protected
 	setStubWidth: function(w) {
@@ -356,7 +393,7 @@ enyo.kind({
 		this.applyStyle("width", (this.viewWidth) + "px");
 	},
 	//*@public
-	/*
+	/**
 	 *Call after you resize any views to setup the correct scroll location
 	*/
 	recalculateSize: function() {
@@ -369,113 +406,218 @@ enyo.kind({
 		if (start < 0) {start = 0;}
 		this.stubWidth = start * this.viewWidth;
 		this.setStubWidth(this.stubWidth);
-		this.setScrollLeft(this.index * this.viewWidth, 0);
+		this.setDirect();
 		
 	},
+
 	//*@protected
-	dragstart: function() {
-		this.isDragging = this.getStrategy().dragging;
+	snapStart: function() {
 		this.lastSL = this.getScrollLeft();
-		this.doTransitionStart({index: this.index});
 	},
 	//*@protected
-	scrollStop: function() {
-		this.inherited(arguments);
-		if (this.snapping) {
-			this.stabalizeControl();
+	scrolling: function() {
+		if (this.getStrategy().dragging) {
+			this.isDragging = true;
+			if (this.shouldFireStartEvent) {this.transitionStart();}
+		}
+		else if (!this.snapping && this.isDragging) {
+			this.isDragging = false;
+			this.snap();
+		}
+		else if (this.snapping && this.closeEnough()) {
+			this.snapFinish();
 		}
 	},
 	//*@protected
-	dragfinish: function(inSender, inEvent) {
-		var d = this.isDragging;
-		if (d) {
-			this.isDragging = false;
-			var sL = this.getScrollLeft();
-			if (sL > this.lastSL) {
-				//forward
-				if (sL - this.lastSL > this.triggerDistance){
-					this.increaseIndex();
-				}
-				this.goingBack = false;
-				this.snapping = true;
+	snapFinish: function() {
+		if (this.snapping) {
+			this.snapping = false;
+			this.transitionFinish();
+			enyo.asyncMethod(this, function() {this.stabalizeControl();});
+		}
+	},
+	//*@protected
+	snap: function() {
+		var sL = this.getScrollLeft();
+		var prevIndex = this.index;
+		var atEnd = (this.index == (this.items.length - 1) && sL >= this.lastSL);
+		if (sL > this.lastSL || atEnd) {
+			//forward
+			if (sL - this.lastSL > this.triggerDistance || atEnd){
+				this.increaseIndex();
 			}
-			else {
-				//back
-				if (this.lastSL - sL > this.triggerDistance){
+			this.goingBack = false;
+		}
+		else if (sL <= this.lastSL) {
+			//back
+			if (this.lastSL - sL > this.triggerDistance){
+				if (this.wentInOverScroll > 0) {
+					this.loadingViewHidden();
+					this.wentInOverScroll = 0;
+				}
+				else {
 					this.decreaseIndex();
 				}
-				this.goingBack = true;
-				this.snapping = true;
 			}
-			this.transistionNearFinish();
-			this.scrollToIndex();
+			this.goingBack = true;
+		}
+		this.transistionNearFinish();
+		this.scrollToIndex(true);
+	},
+	//* @protected
+	/**
+	 * Checks if the scroll is within 6 px of the correct location
+	 * this is needed to speed up the animation end event, otherwise
+	 * there is upto a half second lag time while the scroller
+	 * slowing gets into the last position
+	*/
+	closeEnough: function() {
+		var x = Math.round(this.getScrollLeft());
+		var y = this.index * this.viewWidth;
+		var min = y - 3;
+		var max = y + 3;
+		if (x > min && x < max) {
+			return true;
+		}
+		return false;
+	},
+	//*@protected
+	//* needed on android due to some light drags not firing the full touchdown, touchmove, touchend cycle
+	dragfinish: function(inSender, inEvent) {
+		var d = this.closeEnough();
+		if (d) {
+			this.setDirect();
 		}
 	},
 	//*@protected
-	transistionNearFinish: function() {
-		this.doTransitionNearFinish({index: this.index});
+	//*If we are about to snap, and the user drags again, stop and start over
+	dragstart:function() {
+		if (this.snapping) {
+			this.snapping = false;
+			this.isDragging = false;
+			this.stop();
+			if (this.needsStabalize) {
+				this.stabalizeControl();
+			}
+		}
 	},
 	//*@protected
 	increaseIndex: function() {
+		this.needsStabalize = false;
 		this.index++;
 		var m = this.items.length - 1;
 		if (this.index > m) {
+			if (this.loadingView.name && this.loadingViewIndex == -1) {
+				//*If there is a loading view, create it
+				//*and set the index so we know its made
+				this.loadingViewIndex = m + 1;
+				this.createNextChild(this.loadingView);
+			}
+			if (this.loadingViewIndex >= 0) {
+				//*if we are going to scroll the the loading view
+				//*fire the event that it will be active
+				//*Note, this sends the index of the last
+				//*actual view, not the index of the loading view.
+				this.doLoadingViewVisible({index: m});
+			}
+			//*This is for the scrollTo function to know
+			//*if we are scrolling onto the loading view.
+			this.wentInOverScroll = 1;
 			this.index = m;
+		}
+		else {
+			this.needsStabalize = true;
+		}
+	},
+
+	//*@protected
+	decreaseIndex: function() {
+		this.needsStabalize = false;
+		this.index--;
+		if (this.index < 0) {
+			this.index = 0;
+		}
+		else {
+			this.needsStabalize = true;
 		}
 	},
 	//*@protected
-	decreaseIndex: function() {
-		this.index--;
-		if (this.index < 0) {this.index = 0;}
+	stop: function() {
+		this.getStrategy().$.scrollMath.stop();
 	},
 	//*@protected
-	scrollToIndex: function() {
-		this.scrollTo(this.index * this.viewWidth, 0);
+	scrollToIndex: function(snap) {
+		//If we are on the loadingView, when need to
+		//go one more then the index since the loadingView
+		//does not retain an index number
+		this.stop();
+		if (this.wentInOverScroll > 0) {
+			this.scrollTo((this.index + 1) * this.viewWidth, 0);
+		}
+		else {
+			this.scrollTo(this.index * this.viewWidth, 0);
+		}
+		this.snapping = !snap ? false : snap;
 	},
 	//*@protected
 	stabalizeControl: function() {
-		this.snapping = false;
 		if (this.goingBack === true) {
 			this.moveBack();
 		}
 		else {
 			this.moveForward();
 		}
+
+		this.recalculateSize();
+		this.twiddle();
 	},
 	//*@protected
 	moveForward: function() {
 		// [stub] [invisble] [no images] [prev] [cur] [next] [skinned]
-		if (this.index - this.viewsToLoad > 0) {
-			var x = this.index - this.viewsToLoad + 1;
-			var b = {};
-			var cNoImages$ = this.$[this.items[x].name];
-			var cHidden$ = this.$[this.items[x - 1].name];
-			
-			cNoImages$.stripImages();
-			if (cHidden$) {
-				
-				cHidden$.applyStyle("visibility", "hidden");
-
-				var cDestroy$ = this.$[this.items[x - 2].name];
-				if (cDestroy$ && this.items[this.index + 1]) {
-					b = cDestroy$.getBounds();
-					cDestroy$.destroy();
-					this.stubWidth += b.width;
-					this.setStubWidth(this.stubWidth);
-				}
+		var x = this.index;
+		var i = this.items;
+		var destroy = i[x - 4];
+		var invisible = i[x - 3];
+		var noimages = i[x - 2];
+		if (destroy) {
+			var cDestroy$ = this.$[destroy.name];
+			if (cDestroy$) {
+				var s_w = x - 3;
+				if (s_w < 0) {s_w = 0;}
+				cDestroy$.destroy();
+				this.stubWidth = s_w * this.viewWidth;
+				this.setStubWidth(this.stubWidth);
 			}
 		}
+		if (invisible) {
+			var cInvisible$ = this.$[invisible.name];
+			if (cInvisible$) {
+				cInvisible$.applyStyle("visibility", "hidden");
+			}
+		}
+		if (noimages) {
+			var cNoImages$ = this.$[noimages.name];
+			if (cNoImages$) {
+				cNoImages$.stripImages();
+			}
+		}
+		
 		this.setupNextChildren();
-		this.transitionFinish();
-		this.twiddle();
 	},
 	//*@protected
 	setupNextChildren: function() {
+		// [stub] [invisble] [no images] [prev] [cur] [next] [skinned]
 		var next = this.items[this.index + 1];
 		if (next) {
 			var cNext$ = this.$[next.name];
 			if (cNext$) {
-				cNext$.flowControls(true);
+				if (cNext$.componentsCreated === false) {
+					cNext$.flowControls(true);
+				}
+				else {
+					cNext$.flowImages();
+				}
+				
 				this.createNewestChild();
 			}
 			else {
@@ -492,10 +634,14 @@ enyo.kind({
 	},
 	//*@protected
 	createNewestChild: function() {
-		var newControl = this.items[this.index + 2];
-		if (newControl && !this.$[newControl.name]) {
-			this.$.stub.createComponent(newControl, {owner: this});
-			this.addControl(this.$[newControl.name]);
+		var skinned = this.items[this.index + 2];
+		if (skinned) {
+			var cSkinned$ = this.$[skinned.name];
+			if (!cSkinned$) {
+				this.$.stub.createComponent(skinned, {owner: this});
+				this.addControl(this.$[skinned.name]);
+				this.$[skinned.name].flowControls();
+			}
 		}
 	},
 	//*@protected
@@ -547,13 +693,54 @@ enyo.kind({
 
 		}
 		this.goingBack = false;
-		this.transitionFinish();
-		this.twiddle();
 	},
+	//*@protected
+	//*Sets the scroll position to the exact PX with no animation
+	setDirect: function() {
+		if (this.wentInOverScroll > 0) {
+			this.setScrollLeft((this.index + 1) * this.viewWidth);
+		}
+		else {
+			this.setScrollLeft(this.index * this.viewWidth);
+		}
+	},
+	//*@protected
 	twiddle: function() {
 		this.getStrategy().twiddle();
+		this.twiddleMore();
 	},
+	//*can't seem to twiddle enough on android...
+	twiddleMore: function() {
+		if (this.hasNode()) {
+			this.node.scrollTop = 1;
+			this.node.scrollTop = 0;
+		}
+		document.body.scrollTop = 1;
+		document.body.scrollTop = 0;
+	},
+	//* @protected
+	transitionStart: function() {
+		if (this.wentInOverScroll === 0) {
+			this.doTransitionStart({index: this.index});
+		}
+		this.shouldFireStartEvent = false;
+	},
+	//*@protected
+	transistionNearFinish: function() {
+		if (this.wentInOverScroll === 0) {
+			this.doTransitionNearFinish({index: this.index});
+		}
+	},
+	//*@protected
 	transitionFinish: function() {
-		this.doTransitionFinish({index: this.index});
+		if (this.wentInOverScroll === 0) {
+			this.doTransitionFinish({index: this.index});
+		}
+		this.shouldFireStartEvent = true;
+	},
+	//* @protected
+	loadingViewHidden: function() {
+		//fired when the loadingView is no longer the active view.
+		this.doLoadingViewHidden({index: this.index});
 	}
 });
