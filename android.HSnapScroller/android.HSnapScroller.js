@@ -183,8 +183,8 @@ enyo.kind({
 	components: [
 		{kind: "Control", name: "stub", classes: "scroller-slide", isChrome: true}
 	],
-	//payload of views, all MUST BE the same width and all MUST BE an android.SnapScrollerCell
-	//All items need to have a name property
+	//payload of views, all MUST BE the same width and all MUST BE an SnapScrollerCell
+	//All items MUST have a name property
 	//Call setItems to set the items up. 
 	//setItems requires 3 paramaters, ([payload of views], currentIndex #, boolean to rerender)
 	items: [],
@@ -307,7 +307,7 @@ enyo.kind({
 	//*@protected
 	loadItems: function(reRender) {
 		if (reRender) {
-			this.resetToZero();
+			this.resetToZero(true);
 			this.renderAtIndex();
 		}
 		else {
@@ -325,10 +325,10 @@ enyo.kind({
 		this.setupNextChildren();
 	},
 	//*@protected
-	resetToZero: function() {
+	resetToZero: function(notIndex) {
 		this.destroyClientControls();
 		this.stubWidth = 0;
-		this.index = 0;
+		if (!notIndex) {this.index = 0;}
 		this.setStubWidth(0);
 	},
 	//*@protected
