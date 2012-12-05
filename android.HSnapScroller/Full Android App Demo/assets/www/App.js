@@ -179,8 +179,8 @@ enyo.kind({
 	components: [
 		{kind: "Control", name: "stub", classes: "scroller-slide", isChrome: true}
 	],
-	//payload of views, all MUST BE the same width and all MUST BE a SnapScrollerCell
-	//All items need to have a name property
+	//payload of views, all MUST BE the same width and all MUST BE an SnapScrollerCell
+	//All items MUST have a name property
 	//Call setItems to set the items up. 
 	//setItems requires 3 paramaters, ([payload of views], currentIndex #, boolean to rerender)
 	items: [],
@@ -269,7 +269,7 @@ enyo.kind({
 				this.log(inEvent.index)	
 			}
 
-	You can use this to track if the user is getting near the end of views.
+	You can use this to track if the user is getting near to the end of views.
 
 		transitionFinish: function(inSender, inEvent) {
 				this.currentIndex = inEvent.index;
@@ -278,7 +278,7 @@ enyo.kind({
 				}
 			}
 
-		And when your request for more items comes back, set the items into hsnapscroller again, 
+		And when your request for more items comes back, set the items into hSnapScroller again, 
 		but this time, don't rerender the whole list:
 
 		moreItemsReceived: function() {
@@ -299,11 +299,10 @@ enyo.kind({
 		this.index = curIndex;
 		this.loadItems(reRender);
 	},
-
 	//*@protected
 	loadItems: function(reRender) {
 		if (reRender) {
-			this.resetToZero(true);
+			this.resetToZero();
 			this.renderAtIndex();
 		}
 		else {
@@ -321,10 +320,9 @@ enyo.kind({
 		this.setupNextChildren();
 	},
 	//*@protected
-	resetToZero: function(notIndex) {
+	resetToZero: function() {
 		this.destroyClientControls();
 		this.stubWidth = 0;
-		if (!notIndex) {this.index = 0;}
 		this.setStubWidth(0);
 	},
 	//*@protected

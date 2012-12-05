@@ -273,7 +273,7 @@ enyo.kind({
 				this.log(inEvent.index)	
 			}
 
-	You can use this to track if the user is getting near the end of views.
+	You can use this to track if the user is getting near to the end of views.
 
 		transitionFinish: function(inSender, inEvent) {
 				this.currentIndex = inEvent.index;
@@ -282,7 +282,7 @@ enyo.kind({
 				}
 			}
 
-		And when your request for more items comes back, set the items into hsnapscroller again, 
+		And when your request for more items comes back, set the items into hSnapScroller again, 
 		but this time, don't rerender the whole list:
 
 		moreItemsReceived: function() {
@@ -303,11 +303,10 @@ enyo.kind({
 		this.index = curIndex;
 		this.loadItems(reRender);
 	},
-
 	//*@protected
 	loadItems: function(reRender) {
 		if (reRender) {
-			this.resetToZero(true);
+			this.resetToZero();
 			this.renderAtIndex();
 		}
 		else {
@@ -325,10 +324,9 @@ enyo.kind({
 		this.setupNextChildren();
 	},
 	//*@protected
-	resetToZero: function(notIndex) {
+	resetToZero: function() {
 		this.destroyClientControls();
 		this.stubWidth = 0;
-		if (!notIndex) {this.index = 0;}
 		this.setStubWidth(0);
 	},
 	//*@protected
