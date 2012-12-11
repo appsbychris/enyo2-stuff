@@ -339,7 +339,7 @@ enyo.kind({
 				end++;
 			}
 			else if (this.index > 2) {
-				end += 2;
+				end += this.viewsToLoad;
 			}
 		}
 		for (i = start; i < this.items.length; i++) {
