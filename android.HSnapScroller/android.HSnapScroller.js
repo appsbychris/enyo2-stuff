@@ -131,9 +131,6 @@ enyo.kind({
 	thumb: false,
 	vertical: "hidden",
 	preventDragPropagation: false,
-	published: {
-		
-	},
 	/** @public
 	 *  A SnapScrollerCell that will be inserted when the user reaches to end of the list
 	 *  while new views are being fetched.
@@ -218,9 +215,7 @@ enyo.kind({
 		s.kDragDamping = 0.2;
 		s.kSpringDamping = 0.7;
 		s.frame = 1;
-
 	},
-
 	//*@public
 	getIndex: function() {
 		return this.index;
@@ -326,7 +321,6 @@ enyo.kind({
 	//*@protected
 	resetToZero: function() {
 		this.destroyClientControls();
-		this.stubWidth = 0;
 		this.setStubWidth(0);
 	},
 	//*@protected
@@ -351,7 +345,7 @@ enyo.kind({
 		for (i = start; i < this.items.length; i++) {
 			Arr.push(this.items[i]);
 			c++;
-			if (c > end) {break;}
+			if (c >= end) {break;}
 		}
 		this.createComponents(Arr, {owner: this});
 		this.render();
@@ -387,6 +381,7 @@ enyo.kind({
 	},
 	//*@protected
 	setStubWidth: function(w) {
+		this.stubWidth = w;
 		this.$.stub.applyStyle("width", w + "px");
 		this.applyStyle("width", (this.viewWidth) + "px");
 	},
@@ -402,12 +397,9 @@ enyo.kind({
 		this.viewWidth = b.width || window.innerWidth;
 		var start = this.index - 3;
 		if (start < 0) {start = 0;}
-		this.stubWidth = start * this.viewWidth;
-		this.setStubWidth(this.stubWidth);
+		this.setStubWidth(start * this.viewWidth);
 		this.setDirect();
-		
 	},
-
 	//*@protected
 	snapStart: function() {
 		this.lastSL = this.getScrollLeft();
@@ -527,7 +519,6 @@ enyo.kind({
 			this.needsStabalize = true;
 		}
 	},
-
 	//*@protected
 	decreaseIndex: function() {
 		this.needsStabalize = false;
@@ -583,8 +574,7 @@ enyo.kind({
 				var s_w = x - 3;
 				if (s_w < 0) {s_w = 0;}
 				cDestroy$.destroy();
-				this.stubWidth = s_w * this.viewWidth;
-				this.setStubWidth(this.stubWidth);
+				this.setStubWidth(s_w * this.viewWidth);
 			}
 		}
 		if (invisible) {
@@ -683,8 +673,7 @@ enyo.kind({
 				invisible.addBefore = this.$[noimages.name];
 				this.createComponent(invisible, {owner: this});
 				invisible.addBefore = undefined;
-				this.stubWidth = this.stubWidth - this.viewWidth;
-				this.setStubWidth(this.stubWidth);
+				this.setStubWidth(this.stubWidth - this.viewWidth);
 			}
 			this.$[invisible.name].flowControls();
 			this.$[invisible.name].applyStyle("visibility", "hidden");
