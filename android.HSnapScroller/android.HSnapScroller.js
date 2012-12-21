@@ -348,7 +348,7 @@ enyo.kind({
 		this.createComponents(Arr, {owner: this});
 		this.render();
 		var b = this.$[Arr[0].name].getBounds();
-		this.viewWidth = b.width || window.innerWidth();
+		this.viewWidth = b.width || window.innerWidth;
 
 		var cur = this.items[this.index];
 		var prev = this.items[this.index - 1];
