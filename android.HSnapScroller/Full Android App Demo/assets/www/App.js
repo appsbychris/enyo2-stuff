@@ -285,11 +285,7 @@ enyo.kind({
 	setItems: function(items, curIndex, reRender) {
 		this.items = items;
 		if (this.loadingViewIndex >=0) {
-			this.wentInOverScroll = 0;
-			this.scrollToIndex();
-			this.$[this.loadingView.name].destroy();
-			this.loadingViewIndex = -1;
-			this.loadingViewHidden();
+			this.destroyLoadingView();
 		}
 		this.index = curIndex;
 		this.loadItems(reRender);
@@ -317,6 +313,8 @@ enyo.kind({
 	//*@protected
 	resetToZero: function() {
 		this.destroyClientControls();
+		this.wentInOverScroll = 0;
+		this.loadingViewIndex = -1;
 		this.setStubWidth(0);
 	},
 	//*@protected
@@ -346,7 +344,7 @@ enyo.kind({
 		this.createComponents(Arr, {owner: this});
 		this.render();
 		var b = this.$[Arr[0].name].getBounds();
-		this.viewWidth = b.width || window.innerWidth;
+		this.viewWidth = b.width || window.innerWidth();
 
 		var cur = this.items[this.index];
 		var prev = this.items[this.index - 1];
@@ -358,20 +356,35 @@ enyo.kind({
 		this.$[cur.name].flowControls(true);
 
 		if (prev) {
-			this.$[prev.name].flowControls(true);
+			var cPrev$ = this.$[prev.name];
+			if (cPrev$) {
+				cPrev$.flowControls(true);
+			}
 		}
 		if (nex) {
-			this.$[nex.name].flowControls(true);
+			var cNex$ = this.$[nex.name];
+			if (cNex$) {
+				cNex$.flowControls(true);
+			}
 		}
 		if (skinned) {
-			this.$[skinned.name].flowControls();
+			var cSkinned$ = this.$[skinned.name];
+			if (cSkinned$) {
+				cSkinned$.flowControls();
+			}
 		}
 		if (noimages) {
-			this.$[noimages.name].flowControls();
+			var cNoImages$ = this.$[noimages.name];
+			if (cNoImages$) {
+				cNoImages$.flowControls();
+			}
 		}
 		if (invisible) {
-			this.$[invisible.name].flowControls();
-			this.$[invisible.name].applyStyle("visibility", "hidden");
+			var cInvisible$ = this.$[invisible.name];
+			if (cInvisible$) {
+				cInvisible$.flowControls();
+				cInvisible$.applyStyle("visibility", "hidden");
+			}
 		}
 		this.recalculateSize();
 	},
@@ -525,6 +538,19 @@ enyo.kind({
 		else {
 			this.needsStabalize = true;
 		}
+		if (this.loadingViewIndex >= 0) {
+			if (this.index < this.items.length - 1) {
+				this.destroyLoadingView(true);
+			}
+		}
+	},
+	//*@protected
+	destroyLoadingView: function(noscroll) {
+		this.wentInOverScroll = 0;
+		if (!noscroll) {this.scrollToIndex();}
+		this.$[this.loadingView.name].destroy();
+		this.loadingViewIndex = -1;
+		this.loadingViewHidden();
 	},
 	//*@protected
 	stop: function() {
