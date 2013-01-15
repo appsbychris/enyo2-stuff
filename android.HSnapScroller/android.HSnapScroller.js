@@ -167,7 +167,10 @@ enyo.kind({
 		onLoadingViewVisible: "",
 
 		//fired when the loading view is no longer on the screen.
-		onLoadingViewHidden: ""
+		onLoadingViewHidden: "",
+
+		//fired when attempting to render 0 views
+		onRenderError: ""
 		
 	},
 	handlers: {
@@ -324,6 +327,11 @@ enyo.kind({
 	//*@protected
 	renderAtIndex: function() {
 		// [stub] [invisble] [no images] [prev] [cur] [next] [skinned]
+		if (this.items.length < 1) {
+			console.error("ERROR - No items in list");
+			this.doRenderError();
+			return;
+		}
 		var c = 0;
 		var i = 0;
 		var Arr = [];
@@ -404,8 +412,12 @@ enyo.kind({
 	*/
 	recalculateSize: function() {
 		var b = {};
-		if (this.$[this.items[this.index].name]) {
-			b = this.$[this.items[this.index].name].getBounds();
+		var c = this.items[this.index];
+		if (c) {
+			var c$ = this.$[c.name];
+			if (c$) {
+				b = c$.getBounds();
+			}
 		}
 		this.viewWidth = b.width || window.innerWidth;
 		var start = this.index - 3;
