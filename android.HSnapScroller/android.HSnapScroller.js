@@ -178,7 +178,8 @@ enyo.kind({
 		onScrollStart: "snapStart",
 		onScrollStop: "snapFinish",
 		ondragstart: "dragstart",
-		ondragfinish: "dragfinish"
+		ondragfinish: "dragfinish",
+		onup: "snapScroll"
 	},
 	components: [
 		{kind: "Control", name: "stub", classes: "scroller-slide", isChrome: true}
@@ -206,7 +207,6 @@ enyo.kind({
 	//*@protected
 	snapping: false,
 	goingBack: false,
-	isDragging: false,
 	shouldFireStartEvent: true,
 	//*@protected
 	create: function() {
@@ -351,12 +351,12 @@ enyo.kind({
 		for (i = start; i < this.items.length; i++) {
 			Arr.push(this.items[i]);
 			c++;
-			if (c >= end) {break;}
+			if (c > end) {break;}
 		}
 		this.createComponents(Arr, {owner: this});
 		this.render();
 		var b = this.$[Arr[0].name].getBounds();
-		this.viewWidth = b.width || window.innerWidth;
+		this.viewWidth = b.width || enyo.dom.getWindowWidth();
 
 		var cur = this.items[this.index];
 		var prev = this.items[this.index - 1];
@@ -364,7 +364,6 @@ enyo.kind({
 		var skinned = this.items[this.index + 2];
 		var noimages = this.items[this.index - 2];
 		var invisible = this.items[this.index - 3];
-
 		this.$[cur.name].flowControls(true);
 
 		if (prev) {
@@ -419,7 +418,7 @@ enyo.kind({
 				b = c$.getBounds();
 			}
 		}
-		this.viewWidth = b.width || window.innerWidth;
+		this.viewWidth = b.width || enyo.dom.getWindowWidth();
 		var start = this.index - 3;
 		if (start < 0) {start = 0;}
 		this.setStubWidth(start * this.viewWidth);
@@ -430,14 +429,13 @@ enyo.kind({
 		this.lastSL = this.getScrollLeft();
 	},
 	//*@protected
+	snapScroll: function() {
+		this.snap();
+		return true;
+	},
 	scrolling: function() {
 		if (this.getStrategy().dragging) {
-			this.isDragging = true;
 			if (this.shouldFireStartEvent) {this.transitionStart();}
-		}
-		else if (!this.snapping && this.isDragging) {
-			this.isDragging = false;
-			this.snap();
 		}
 		else if (this.snapping && this.closeEnough()) {
 			this.snapFinish();
@@ -509,7 +507,6 @@ enyo.kind({
 	dragstart:function() {
 		if (this.snapping) {
 			this.snapping = false;
-			this.isDragging = false;
 			this.stop();
 			if (this.needsStabalize) {
 				this.stabalizeControl();
