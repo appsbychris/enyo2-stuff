@@ -1,0 +1,38 @@
+.toaster {
+	position: absolute;
+	font-size: 16px;
+	box-shadow: 0 6px 10px rgba(0, 0, 0, 0.2);
+	border: 1px solid rgba(0, 0, 0, 0.2);
+	border-radius: 8px;
+	padding: 6px;
+	color: #ffffff;
+	background: #4c4c4c url(./../images/gradient.png) repeat-x 0 bottom;
+}
+
+.toaster.top {
+	top:0;
+	border-radius: 5px;
+}
+
+.toaster.right {
+	right: 0;
+	left: auto;
+	border-top-left-radius: 5px;
+	border-bottom-left-radius: 5px;
+}
+
+.toaster.bottom {
+	top: auto;
+	bottom: 0;
+	border-radius: 5px;
+}
+
+.toaster.left {
+	left: 0;
+	border-top-right-radius: 5px;
+	border-bottom-right-radius: 5px;
+}
+
+.toaster.full-radius {
+	border-radius: 5px;
+}
