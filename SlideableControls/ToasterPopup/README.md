@@ -16,5 +16,5 @@ To position the popup, you can either set the "top" and "left" properties when d
 Note Toaster popup is based off Slideable3d, but will work with just the normal Slideable if you wish.
 
 Check out the sample in the Sample folder.
-For a jsFiddle, see  [SlideableMenu on jsFiddle](http://jsfiddle.net/B4QHA/)
+For a jsFiddle, see  [SlideableMenu on jsFiddle](http://jsfiddle.net/B4QHA/1/)
 
