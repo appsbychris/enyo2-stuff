@@ -91,7 +91,7 @@ enyo.kind({
 		onAnimateFinish: "checkForHide"
 	},
 	scrimTools: [
-		{kind: "onyx.Scrim", classes: "onyx-scrim-translucent", isChrome: true, name: "scrim", style: "-webkit-transform: translate3d(0,0,0);", ontap: "scrimTap"}
+		{kind: "onyx.Scrim", classes: "onyx-scrim-translucent", isChrome: true, name: "scrim", style: "-webkit-transform: translate3d(0,0,0);", ontap: "scrimTap", addBefore: null}
 	],
 	components: [
 		
@@ -99,14 +99,7 @@ enyo.kind({
 	defaultZ: 120,
 	//* @protected
 	create: function() {
-		this.inherited(arguments);
 		this.canGenerate = !this.floating;
-		this.scrimChanged();
-		this.applyAlign(true);
-		this.$.animator.setDuration(this.duration);
-	},
-	//* @protected
-	render: function() {
 		if (this.floating) {
 			if (!enyo.floatingLayer.hasNode()) {
 				enyo.floatingLayer.render();
@@ -114,7 +107,17 @@ enyo.kind({
 			this.parentNode = enyo.floatingLayer.hasNode();
 		}
 		this.inherited(arguments);
+		if (!this.floating) {
+			this.scrimChanged();
+		}
+		this.applyAlign(true);
+		this.$.animator.setDuration(this.duration);
 		this.centeredChanged();
+		this.addClass("fill-forwards");
+	},
+	//* @protected
+	render: function() {
+		this.inherited(arguments);
 	},
 	//* @public
 	//* Provide an object with either or both "top" and "left" properties.
@@ -183,6 +186,7 @@ enyo.kind({
 		}
 		this.applyStyle("z-index", this._zIndex);
 		if (this.scrim) {
+			this.createScrim();
 			this.$.scrim.setZIndex(this._zIndex-1);
 		}
 		
@@ -365,12 +369,22 @@ enyo.kind({
 			}
 		}
 	},
+	hide: function() {
+		if (this.isOpen === false) {return;}
+
+		this.inherited(arguments);
+		this.release();
+		
+	},
 	//* @protected
 	animateOpen: function() {
 		this.show();
 		ToasterPopup.count++;
 		this.applyZIndex();
-		if (this.scrim) {this.$.scrim.show();}
+		if (this.scrim) {
+			this.createScrim();
+			this.$.scrim.show();
+		}
 		this.animateCellOpen();
 		this.capture();
 	},
@@ -420,6 +434,7 @@ enyo.kind({
 	},
 	//* @protected
 	release: function() {
+		if (this.captured === false) {return;}
 		enyo.dispatcher.release(this);
 		this.captured = false;
 	},

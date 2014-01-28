@@ -1,5 +1,5 @@
 enyo.depends(
 	"toaster.css",
-	"Slideable3d.js",
+	"../Slideable3d-With-keyframes/Slideable3d.js",
 	"toaster.js"
 );

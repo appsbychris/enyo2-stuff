@@ -12,7 +12,7 @@ but still wasn't smooth when animating.
 So i stuck in keyframes to take place of the animator and you get really nice results.
 
 To setup the keyframes, here is some sample code:
-
+```javascript
 var values = [];
 values.push({
 	keyText: "0%",
@@ -27,6 +27,7 @@ this.applyStyle(enyo.dom.getCSSPrefix("animation-timing-function", "AnimationTim
 //this.applyStyle(enyo.dom.getCSSPrefix("animation-fill-mode", "AnimationFillMode"), "forwards");
 enyo.dom.createKeyframes("slideable-slide" + Slideable3d.count, values);
 this.keyFrameRule = "slideable-slide" + Slideable3d.count;
+```
 
 If you have multiple instances of the same control, you will want to have a different keyframe rule for each instance, otherwise
 you will end up with some animations cut short if you try to adjust the keyframe while another is running.
@@ -43,6 +44,7 @@ To change keyframes at runtime:
 
 Assuming inStart is your start value and inEnd is your end value.
 
+```javascript
 var values = [];
 values.push({
 	keyText: "0%",
@@ -53,6 +55,7 @@ values.push({
 	keyValue: (this.transform == "translateX" ? "{" + enyo.dom.getCssTransformProp() + ": translate3d(" + inEnd + this.unit +",0,0);}" : "{" + enyo.dom.getCssTransformProp() + ": translate3d(0," + inEnd + this.unit + ",0);}")
 });
 this.applyStyle(enyo.dom.getCSSPrefix("animation-name", "AnimationName"), enyo.dom.changeKeyframes(this.keyFrameRule, values));
+```
 
 You can use enyo.dom.changeKeyframes() which takes 2 arguments.
 The first is the keyframe Rule name as a string, and then an array of values like before.
