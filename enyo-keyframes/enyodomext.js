@@ -84,7 +84,7 @@ enyo.dom.changeKeyframes = function (keyframe, values) {
 			keyframes.deleteRule(keyframeString[i]);
 		}
         for (i = 0; i < values.length; i++) {
-			keyframes.insertRule(values[i].keyText + " " + values[i].keyValue);
+			keyframes.appendRule(values[i].keyText + " " + values[i].keyValue);
         }
         return keyframe;
     }
