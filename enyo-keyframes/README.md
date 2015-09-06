@@ -71,4 +71,4 @@ On BB10, i have found keyframes actually functions worse, so i have disabled it 
 Check out the sample, and also the ToasterPopup modified to use keyframes.
 
 (please note you need to have web security disabled to use this on a normal browser.)
-For a jsFiddle, see  [Slideable keyframes sample](http://jsfiddle.net/jq7yM/1/)
+For a jsFiddle, see  [Slideable keyframes sample](http://jsfiddle.net/jq7yM/2/)
